@@ -1,9 +1,11 @@
 name: Deploy to Production (Main)
 
 on:
-  push:
+  pull_request:
     branches:
       - main
+    types:
+      - merged
 
 env:
   PROMETHEUS_TAG: "latest"           # Tag Docker cho Prometheus
