@@ -23,7 +23,7 @@ scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: "prometheus"
     static_configs:
-      - targets: ["192.168.101.146:9090"]
+      - targets: ["10.10.1.146:9090"]
         labels:
           hostname: PrometheusProd
           type: docker
@@ -31,7 +31,7 @@ scrape_configs:
 
   - job_name: "node-exporter"
     static_configs:
-      - targets: ["192.168.101.146:9100"]
+      - targets: ["10.10.1.146:9100"]
         labels:
           hostname: linux
           type: linux-server
@@ -40,39 +40,39 @@ scrape_configs:
 #switch cisco
   - job_name: "snmp-exporter-cisco-switch"
     static_configs:
-      - targets: ['192.168.101.11']
+      - targets: ['10.10.1.11']
         labels:
           hostname: "ISP-Router-1"
           type: cisco
-      - targets: ['192.168.101.12']
+      - targets: ['10.10.1.12']
         labels:
           hostname: "ISP-Router-2"
           type: cisco
-      - targets: ['192.168.101.13']
+      - targets: ['10.10.1.13']
         labels:
           hostname: "Core-Router-1"
           type: cisco
-      - targets: ['192.168.101.14']
+      - targets: ['10.10.1.14']
         labels:
           hostname: "Core-Router-2"
           type: cisco
-      - targets: ['192.168.101.15']
+      - targets: ['10.10.1.15']
         labels:
           hostname: "DIST-1"
           type: cisco
-      - targets: ['192.168.101.16']
+      - targets: ['10.10.1.16']
         labels:
           hostname: "DIST-2"
           type: cisco
-      - targets: ['192.168.101.21']
+      - targets: ['10.10.1.21']
         labels:
           hostname: "ACC-1"
           type: cisco
-      - targets: ['192.168.101.22']
+      - targets: ['10.10.1.22']
         labels:
           hostname: "ACC-2"
           type: cisco
-      - targets: ['192.168.101.23']
+      - targets: ['10.10.1.23']
         labels:
           hostname: "ACC-3"
           type: cisco
@@ -84,6 +84,6 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: '192.168.101.146:9116'
+        replacement: '10.10.1.146:9116'
     tls_config:
       insecure_skip_verify: true
