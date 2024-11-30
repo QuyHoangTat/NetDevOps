@@ -6,14 +6,22 @@ on:
       - main
 
 env:
-  PROMETHEUS_TAG: "latest"           # Tag cho Prometheus trong nhánh main
-  SNMP_EXPORTER_TAG: "latest"        # Tag cho SNMP Exporter trong nhánh main
-  ALERT_MANAGER_TAG: "latest"        # Tag cho Alert Manager trong nhánh main
-  GRAFANA_TAG: "latest"              # Tag cho Grafana trong nhánh main
+  PROMETHEUS_TAG: "latest"           # Tag Docker cho Prometheus
+  SNMP_EXPORTER_TAG: "latest"        # Tag Docker cho SNMP Exporter
+  ALERT_MANAGER_TAG: "latest"        # Tag Docker cho Alert Manager
+  GRAFANA_TAG: "latest"              # Tag Docker cho Grafana
+  ANSIBLE_USER: ${{ secrets.ANSIBLE_USER }}
+  ANSIBLE_PASSWORD: ${{ secrets.ANSIBLE_PASSWORD }}
+  GF_SECURITY_ADMIN_USER: ${{ secrets.GF_SECURITY_ADMIN_USER }}
+  GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+
+permissions:
+  contents: read
 
 jobs:
-  build_monitor:
-    name: Build Monitor
+  # Job monitor
+  monitor:
+    name: Monitor
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -21,58 +29,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set Docker tags based on branch (main)
-      - name: Set up Docker tags for Main
-        run: |
-          echo "PROMETHEUS_TAG=latest" >> $GITHUB_ENV
-          echo "SNMP_EXPORTER_TAG=latest" >> $GITHUB_ENV
-          echo "ALERT_MANAGER_TAG=latest" >> $GITHUB_ENV
-          echo "GRAFANA_TAG=latest" >> $GITHUB_ENV
-
-      # Install Docker
-      - name: Install Docker
-        run: |
-          sudo apt update
-          sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-          sudo apt install docker-ce -y
-          sudo usermod -aG docker ${USER}
-
-      # Install Trivy
-      - name: Install Trivy
-        run: |
-          sudo apt update
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.57.1/trivy_0.57.1_Linux-64bit.deb
-          sudo dpkg -i trivy_0.57.1_Linux-64bit.deb
-
-      # Build Docker images
-      - name: Build Docker Images
+      # Set Grafana secrets in .grafana.secret
+      - name: Set Grafana secrets in .grafana.secret
         run: |
           cd Monitoring
-          sudo docker-compose build
+          echo "GF_SECURITY_ADMIN_USER=${{ secrets.GF_SECURITY_ADMIN_USER }}" > .grafana.secret
+          echo "GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}" >> .grafana.secret
 
-      # Run Docker Compose up
-      - name: Run Docker Compose
-        run: |
-          cd Monitoring
-          sudo docker-compose up -d
-          
       # Install Monitoring Server
       - name: Install Monitoring Server
         run: |
           cd Monitoring
-          sudo docker-compose start
+          sudo docker compose up -d
+          sudo docker compose start
+          cd snmp-exporter
+          sudo docker run --rm -v $(pwd)/mibs:/opt/mibs -v $(pwd)/generator.yml:/opt/generator.yml -v $(pwd):/opt prom/snmp-generator:main generate
+          cd ..
+          sudo docker compose restart
 
-  # Job to deploy with Ansible
+  # Job Deploy
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: build_monitor
+    needs: monitor
     steps:
-      - name: Checkout code
+      # Checkout code from repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Run Ansible Playbook
       - name: Run Ansible Playbook
         run: |
           cd Network
