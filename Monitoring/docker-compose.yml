@@ -1,7 +1,9 @@
+version: '3'
+
 services:
-#prometheus
+  # Prometheus
   prometheus:
-    # image: prom/prometheus
+    image: prom/prometheus:${{ env.PROMETHEUS_TAG }}  # Sử dụng biến môi trường từ GitHub Actions
     build:
       context: .
       dockerfile: DockerfilePrometheus
@@ -13,16 +15,12 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./alert-rules:/etc/prometheus/rules
-    # command:
-    #   - --config.file=/etc/prometheus/prometheus.yml
-    #   - --storage.tsdb.retention.time=15d
-    #   - --storage.tsdb.path=data/
     networks:
       - monitoring
 
-#snmp-exporter
+  # SNMP Exporter
   snmp-exporter:
-    # image: prom/snmp-exporter
+    image: prom/snmp-exporter:${{ env.SNMP_EXPORTER_TAG }}  # Sử dụng biến môi trường từ GitHub Actions
     build:
       context: .
       dockerfile: DockerfileSNMP-Exporter
@@ -34,9 +32,9 @@ services:
     networks:
       - monitoring
 
-#alert-manager
+  # Alert Manager
   alert-manager:
-    # image: prom/alertmanager
+    image: prom/alertmanager:${{ env.ALERT_MANAGER_TAG }}  # Sử dụng biến môi trường từ GitHub Actions
     build:
       context: .
       dockerfile: DockerfileAlertManager
@@ -47,15 +45,13 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./alertmanager:/etc/alertmanager
-    # command:
-    #   - --config.file=/etc/alertmanager/alertmanager.yml
     networks:
       - monitoring
 
-#grafana    
+  # Grafana
   grafana:
-    # image: grafana/grafana
-    build: 
+    image: grafana/grafana:${{ env.GRAFANA_TAG }}  # Sử dụng biến môi trường từ GitHub Actions
+    build:
       context: .
       dockerfile: DockerfileGrafana
     user: root
